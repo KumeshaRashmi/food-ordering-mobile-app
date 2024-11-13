@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "566942163822",
+    "project_id": "food-order-ec752",
+    "storage_bucket": "food-order-ec752.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:566942163822:android:ace81f03da44bb45f6177f",
+        "android_client_info": {
+          "package_name": "com.example.foodorder"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "566942163822-dng3guvfrurgtno5v3197mnkgn6qfhqq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.foodorder",
+            "certificate_hash": "9b0fb9412a49b2dedc3d3c539e54f279222d0971"
+          }
+        },
+        {
+          "client_id": "566942163822-ba8gig7lnv09hrj36eikeiannfi9kjam.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCB8geSaDVliHEbBEwbOwnTi9zrl6zqrM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "566942163822-ba8gig7lnv09hrj36eikeiannfi9kjam.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
