@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
-import 'login_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'home.dart';
+import 'login.dart';
 
 class SignupPage extends StatelessWidget {
   final TextEditingController fullNameController = TextEditingController();
@@ -9,10 +12,97 @@ class SignupPage extends StatelessWidget {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
+  SignupPage({super.key});
+
+  // Register user with Firebase
+  Future<void> _register(BuildContext context) async {
+    final String email = emailController.text.trim();
+    final String password = passwordController.text.trim();
+    final String confirmPassword = confirmPasswordController.text.trim();
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match")),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Password must be at least 6 characters long")),
+      );
+      return;
+    }
+
+    try {
+    UserCredential userCredential = await FirebaseAuth.instance
+        .createUserWithEmailAndPassword(email: email, password: password);
+    
+    // Save user details in Firestore
+    await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+      'fullName': fullNameController.text.trim(),
+      'email': email,
+      'phone': phoneController.text.trim(),
+      'profileImageUrl': '', 
+    });
+    
+      // Navigate to Home page if successful
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Home(
+            profileImageUrl: '', 
+            displayName: fullNameController.text.trim(),
+            email: email,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Registration failed: $e")),
+      );
+    }
+  }
+
+  // Google Sign-In
+  Future<void> _signInWithGoogle(BuildContext context) async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      User? user = userCredential.user;
+
+      if (user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Home(
+              profileImageUrl: user.photoURL ?? '',
+              displayName: user.displayName ?? 'No Name',
+              email: user.email ?? 'No Email',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Google Sign-In failed: $e")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF1F0), 
+      backgroundColor: const Color.fromARGB(255, 237, 249, 239),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: SingleChildScrollView(
@@ -20,19 +110,12 @@ class SignupPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 50),
-              
-              // Welcome Text
               const Text(
                 'Welcome to MenuMate!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
               const SizedBox(height: 30),
 
-              // Full Name TextField
               _buildTextField(
                 controller: fullNameController,
                 hintText: 'Full Name',
@@ -40,7 +123,6 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 15),
 
-              // Email TextField
               _buildTextField(
                 controller: emailController,
                 hintText: 'Email',
@@ -48,7 +130,6 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 15),
 
-              // Phone TextField
               _buildTextField(
                 controller: phoneController,
                 hintText: 'Phone',
@@ -56,7 +137,6 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 15),
 
-              // Password TextField
               _buildTextField(
                 controller: passwordController,
                 hintText: 'Password',
@@ -65,7 +145,6 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 15),
 
-              // Confirm Password TextField
               _buildTextField(
                 controller: confirmPasswordController,
                 hintText: 'Confirm Password',
@@ -74,30 +153,22 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // Sign Up Button
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent, // Button color
+                  backgroundColor: const Color.fromARGB(255, 82, 255, 97),
                   padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => HomePage()),
-                  );
-                },
+                onPressed: () => _register(context),
                 child: const Text(
                   'Sign Up',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 12, 12, 12)),
                 ),
               ),
-
               const SizedBox(height: 15),
 
-              
               const Row(
                 children: [
                   Expanded(child: Divider(color: Colors.grey)),
@@ -110,27 +181,16 @@ class SignupPage extends StatelessWidget {
               ),
               const SizedBox(height: 15),
 
-              // Google Sign-In Button
               OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  side: const BorderSide(color: Colors.grey),
-                ),
+                icon: Image.asset('lib/assests/google.jpg', width: 24),
                 label: const Text(
                   'Continue with Google',
                   style: TextStyle(fontSize: 16, color: Colors.black87),
                 ),
-                onPressed: () {
-                  
-                },
+                onPressed: () => _signInWithGoogle(context),
               ),
-
               const SizedBox(height: 20),
 
-              
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -140,17 +200,14 @@ class SignupPage extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () {
-                    Navigator.push(
+                      Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => LoginPage()),);
-
+                        MaterialPageRoute(builder: (context) => LoginPage()),
+                      );
                     },
                     child: const Text(
                       'Sign In',
-                      style: TextStyle(
-                        color: Colors.redAccent,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: Color.fromARGB(255, 4, 126, 51), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -162,7 +219,6 @@ class SignupPage extends StatelessWidget {
     );
   }
 
-  // Reusable TextField Builder
   Widget _buildTextField({
     required TextEditingController controller,
     required String hintText,

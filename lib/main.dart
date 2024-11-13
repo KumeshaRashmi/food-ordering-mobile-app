@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:foodorder/screens/splash_page.dart';
+import 'package:foodorder/screens/splash.dart';
+ import 'package:firebase_core/firebase_core.dart';
  // Import the splash page
 
-void main() {
-  runApp(MyApp());
-  
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   
   Widget build(BuildContext context) {
@@ -17,7 +21,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
-      home: SplashPage(),  // Set SplashPage as the initial page
+      home: const SplashPage(),  // Set SplashPage as the initial page
     );
   }
 }
+
